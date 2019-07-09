@@ -12,12 +12,13 @@ import torch.nn.functional as F
 
 class MacCell(nn.Module):
     
-    def __init__(self, d=512):
+    def __init__(self, device, d=512):
         
         super(MacCell, self).__init__()
         self.d = d # Dimension of control and memory states
         self.S = None # Number of words in the question
         self.p = None # Number of reasoning steps
+        self.device = device
         
         self.q = None
         self.cws = None
@@ -45,7 +46,7 @@ class MacCell(nn.Module):
         #ci_1, qi : batch_size x d
         #cws : batch_size x S x d
         qi = self.control_qi(q)
-        cqi = self.cqi_linear(torch.cat([ci_1, qi], dim=1)) # batch_size x d
+        cqi = self.cqi_linear(torch.cat([ci_1, qi], dim=1).to(self.device)) # batch_size x d
         cqi_cws = cqi.unsqueeze(dim=1) * cws # batch x S x d
         cai = self.cais_linear(cqi_cws)# batch x S x 1
         cvis = F.softmax(cai, dim=1) # batch x S x 1
@@ -60,7 +61,7 @@ class MacCell(nn.Module):
         #ci :batch x d
         
         Ii = self.memory_read_m(mi_1).unsqueeze_(1).unsqueeze_(1) * self.memory_read_k(K) # batch x H x W x d
-        Ii_prime = self.memory_read_ik(torch.cat([Ii, K], dim=3)) # batch x H x W x d
+        Ii_prime = self.memory_read_ik(torch.cat([Ii, K], dim=3).to(self.device)) # batch x H x W x d
         
         rai = self.memory_read_ci_i(ci.unsqueeze(1).unsqueeze_(1) * Ii_prime) # batch x H x W x d
         
@@ -79,7 +80,7 @@ class MacCell(nn.Module):
         #M : batch x p x d
         #ci : batch x d
         
-        mi_info = self.memory_write_ri_mi_1(torch.cat([ri, mi_1], dim=1))
+        mi_info = self.memory_write_ri_mi_1(torch.cat([ri, mi_1], dim=1).to(self.device))
         
         #C_past = C[:,:i,:] # batch x i x d
         #M_past = M[:,:i,:] # batch x i x d
