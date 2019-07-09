@@ -10,9 +10,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from InputUnit import InputUnit
-from OutputUnit import OutputUnit
-from MacCell import MacCell
+from .InputUnit import InputUnit
+from .OutputUnit import OutputUnit
+from .MacCell import MacCell
 
 class MacNetwork(nn.Module):
     

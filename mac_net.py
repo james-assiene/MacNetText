@@ -20,7 +20,7 @@ from parlai.core.torch_agent import TorchAgent, Output
 from parlai.core.utils import padded_3d
 from parlai.core.logs import TensorboardLogger
 
-from MacNetwork import MacNetwork
+from .MacNetwork import MacNetwork
 
 from tensorboardX import SummaryWriter
 
