@@ -55,12 +55,12 @@ class MacNetAgent(TorchAgent):
         self.max_seq_length = 512
         self.on_text = True
         self.batch_iter = 0
+        self.device =  torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
-        self.model = MacNetwork(vocab_size=self.vocab_size, n_labels=self.n_labels, batch_size=self.batch_size)
+        self.model = MacNetwork(self.device, vocab_size=self.vocab_size, n_labels=self.n_labels, batch_size=self.batch_size)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
         
         self.writer = SummaryWriter()
-        self.device =  torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
         self.model = self.model.to(self.device)
         

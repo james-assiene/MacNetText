@@ -16,7 +16,7 @@ from .MacCell import MacCell
 
 class MacNetwork(nn.Module):
     
-    def __init__(self, vocab_size=3, n_labels=1, batch_size=2, d=512, p=12, on_text=True, max_seq_len=512):
+    def __init__(self, device, vocab_size=3, n_labels=1, batch_size=2, d=512, p=12, on_text=True, max_seq_len=512):
         
         super(MacNetwork, self).__init__()
         self.d = d # Dimension of control and memory states
@@ -26,6 +26,7 @@ class MacNetwork(nn.Module):
         self.batch_size = batch_size
         self.on_text = on_text
         self.max_seq_len = max_seq_len
+        self.device = device
         
         self.m0 = torch.rand((self.batch_size, self.d))
         self.c0 = torch.rand((self.batch_size, self.d))
@@ -34,7 +35,7 @@ class MacNetwork(nn.Module):
         self.M_past = torch.zeros((self.batch_size, self.p + 1, self.d))
         self.M_past[:,0,:] = self.m0
         
-        self.input_unit = InputUnit(self.vocab_size, self.on_text, self.max_seq_len, self.batch_size)
+        self.input_unit = InputUnit(self.device, self.vocab_size, self.on_text, self.max_seq_len, self.batch_size)
         self.mac_cells = [MacCell() for i in range(self.p)]
         self.output_unit = OutputUnit(self.n_labels)
         
