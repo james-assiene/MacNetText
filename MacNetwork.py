@@ -28,11 +28,11 @@ class MacNetwork(nn.Module):
         self.max_seq_len = max_seq_len
         self.device = device
         
-        self.m0 = torch.rand((self.batch_size, self.d))
-        self.c0 = torch.rand((self.batch_size, self.d))
-        self.C_past = torch.zeros((self.batch_size, self.p + 1, self.d))
+        self.m0 = torch.rand((self.batch_size, self.d)).to(self.device)
+        self.c0 = torch.rand((self.batch_size, self.d)).to(self.device)
+        self.C_past = torch.zeros((self.batch_size, self.p + 1, self.d)).to(self.device)
         self.C_past[:,0,:] = self.c0
-        self.M_past = torch.zeros((self.batch_size, self.p + 1, self.d))
+        self.M_past = torch.zeros((self.batch_size, self.p + 1, self.d)).to(self.device)
         self.M_past[:,0,:] = self.m0
         
         self.input_unit = InputUnit(self.device, self.vocab_size, self.on_text, self.max_seq_len, self.batch_size)
