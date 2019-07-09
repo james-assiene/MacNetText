@@ -90,7 +90,7 @@ class MacNetAgent(TorchAgent):
         
         self.optimizer.zero_grad()
         
-        answers_dist = self.model(contexts, questions)
+        answers_dist = self.model(contexts, questions).to(self.device)
         label_indices = torch.zeros(len(batch.observations), dtype=torch.long)
         for i in range(label_indices.shape[0]):
             label_indices[i] = batch.observations[i]["label_candidates"].index(batch.observations[i]["labels"][0])
