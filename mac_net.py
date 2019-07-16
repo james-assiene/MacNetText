@@ -24,6 +24,8 @@ from .MacNetwork import MacNetwork
 
 from tensorboardX import SummaryWriter
 
+from memory_profiler import profile
+
 losses = []
 
 class MacNetAgent(TorchAgent):
@@ -74,6 +76,7 @@ class MacNetAgent(TorchAgent):
         return super().vectorize(*args, **kwargs)
         
     
+    @profile
     def train_step(self, batch):
         
         print("hello")
