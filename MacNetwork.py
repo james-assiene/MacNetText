@@ -31,9 +31,9 @@ class MacNetwork(nn.Module):
         self.m0 = torch.rand((self.batch_size, self.d)).to(self.device)
         self.c0 = torch.rand((self.batch_size, self.d)).to(self.device)
         self.C_past = torch.zeros((self.batch_size, self.p + 1, self.d)).to(self.device)
-        self.C_past[:,0,:] = self.c0
+        self.C_past[:,0,:] = self.c0.detach()
         self.M_past = torch.zeros((self.batch_size, self.p + 1, self.d)).to(self.device)
-        self.M_past[:,0,:] = self.m0
+        self.M_past[:,0,:] = self.m0.detach()
         
         self.input_unit = InputUnit(self.device, self.vocab_size, self.on_text, self.max_seq_len, self.batch_size)
         self.mac_cells = [MacCell(self.device).to(self.device) for i in range(self.p)]
@@ -47,14 +47,14 @@ class MacNetwork(nn.Module):
         
         for i in range(self.p):
             mac_cell = self.mac_cells[i]
-            mac_cell.K = K
-            mac_cell.q = q
-            mac_cell.cws = cws
-            mac_cell.C_past = self.C_past[:,:i+1,:].clone()
-            mac_cell.M_past = self.M_past[:,:i+1,:].clone()
+            mac_cell.K = K.detach()
+            mac_cell.q = q.detach()
+            mac_cell.cws = cws.detach()
+            mac_cell.C_past = self.C_past[:,:i+1,:].detach()
+            mac_cell.M_past = self.M_past[:,:i+1,:].detach()
             ci, mi = mac_cell(ci, mi)
-            self.C_past[:,i+1,:] = ci
-            self.M_past[:,i+1,:] = mi
+            self.C_past[:,i+1,:] = ci.detach()
+            self.M_past[:,i+1,:] = mi.detach()
         
         
         ans = self.output_unit(mi, ci, label_candidates_encoded)

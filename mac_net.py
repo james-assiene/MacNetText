@@ -81,6 +81,7 @@ class MacNetAgent(TorchAgent):
         
         print("hello")
         top_n = 3
+        self.model.train()
         
         if self.on_text == False:
             image_preprocessing = transforms.Compose([transforms.Resize((224,224)), transforms.ToTensor()])
@@ -142,6 +143,8 @@ class MacNetAgent(TorchAgent):
         
     
     def eval_step(self, batch):
+        
+        self.model.eval()
         
         if self.on_text == False:
             image_preprocessing = transforms.Compose([transforms.Resize((224,224)), transforms.ToTensor()])
