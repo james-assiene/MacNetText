@@ -144,8 +144,6 @@ class InputUnit(nn.Module):
     
     def string_to_token_ids(self, string):
         
-        self.bert_tokenizer.eval()
-        
         string = "[CLS] " + string + " [SEP]"
         tokenized_string = self.bert_tokenizer.tokenize(string)
         token_ids = self.bert_tokenizer.convert_tokens_to_ids(tokenized_string)
