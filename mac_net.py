@@ -110,11 +110,15 @@ class MacNetAgent(TorchAgent):
         print("Saving to tensorboard...")
         
         self.writer.add_scalar("data/loss", loss.detach(), self.batch_iter)
+        print("loss done")
         
+        print("bert model...")
         for name, param in self.model.named_parameters():
             if "bert_model" not in name:
                 self.writer.add_histogram(name, param.clone().cpu().detach().numpy(), self.batch_iter)
             #self.writer.add_histogram(name + "_grad", param.grad.clone().cpu().data.numpy(), self.batch_iter)
+            
+        print("mac cells...")
         for mac_cell in self.model.mac_cells:
             for name_in, param_in in mac_cell.named_parameters():
                 self.writer.add_histogram(name_in, param_in.clone().cpu().detach().data.numpy(), self.batch_iter)
