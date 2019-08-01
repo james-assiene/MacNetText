@@ -76,7 +76,6 @@ class MacNetAgent(TorchAgent):
         return super().vectorize(*args, **kwargs)
         
     
-    @profile
     def train_step(self, batch):
         
         print("hello")
@@ -105,15 +104,15 @@ class MacNetAgent(TorchAgent):
         loss = self.criterion(answers_dist, label_indices)
         loss.backward(retain_graph=True)
         
-        self.writer.add_scalar("data/loss", loss, self.batch_iter)
+        self.writer.add_scalar("data/loss", loss.detach(), self.batch_iter)
         
         for name, param in self.model.named_parameters():
             if "bert_model" not in name:
-                self.writer.add_histogram(name, param.clone().cpu().data.numpy(), self.batch_iter)
+                self.writer.add_histogram(name, param.clone().cpu().detach().numpy(), self.batch_iter)
             #self.writer.add_histogram(name + "_grad", param.grad.clone().cpu().data.numpy(), self.batch_iter)
         for mac_cell in self.model.mac_cells:
             for name_in, param_in in mac_cell.named_parameters():
-                self.writer.add_histogram(name_in, param_in.clone().cpu().data.numpy(), self.batch_iter)
+                self.writer.add_histogram(name_in, param_in.clone().cpu().detach().data.numpy(), self.batch_iter)
                 #self.writer.add_histogram(name_in + "_grad", param_in.grad.clone().cpu().data.numpy(), self.batch_iter)
 
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), 10)
