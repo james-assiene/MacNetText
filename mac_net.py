@@ -95,6 +95,7 @@ class MacNetAgent(TorchAgent):
         self.optimizer.zero_grad()
         
         answers_dist = self.model(contexts, questions).to(self.device)
+        print("forward pass done")
         label_indices = torch.zeros(len(batch.observations), dtype=torch.long)
         for i in range(label_indices.shape[0]):
             label_indices[i] = batch.observations[i]["label_candidates"].index(batch.observations[i]["labels"][0])
@@ -102,7 +103,9 @@ class MacNetAgent(TorchAgent):
         label_indices = label_indices.to(self.device)
         
         loss = self.criterion(answers_dist, label_indices)
+        print("Starting backward...")
         loss.backward(retain_graph=True)
+        print("Backward done")
         
         self.writer.add_scalar("data/loss", loss.detach(), self.batch_iter)
         
