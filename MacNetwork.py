@@ -50,11 +50,11 @@ class MacNetwork(nn.Module):
             mac_cell.K = K
             mac_cell.q = q
             mac_cell.cws = cws
-            mac_cell.C_past = self.C_past[:,:i+1,:].detach()
-            mac_cell.M_past = self.M_past[:,:i+1,:].detach()
+            mac_cell.C_past = self.C_past[:,:i+1,:]
+            mac_cell.M_past = self.M_past[:,:i+1,:]
             ci, mi = mac_cell(ci, mi)
-            self.C_past[:,i+1,:] = ci.detach()
-            self.M_past[:,i+1,:] = mi.detach()
+            self.C_past[:,i+1,:] = ci.clone()
+            self.M_past[:,i+1,:] = mi.clone()
         
         
         ans = self.output_unit(mi, ci, label_candidates_encoded)
