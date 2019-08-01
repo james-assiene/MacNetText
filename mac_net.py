@@ -107,6 +107,8 @@ class MacNetAgent(TorchAgent):
         loss.backward(retain_graph=True)
         print("Backward done")
         
+        print("Saving to tensorboard...")
+        
         self.writer.add_scalar("data/loss", loss.detach(), self.batch_iter)
         
         for name, param in self.model.named_parameters():
@@ -117,9 +119,14 @@ class MacNetAgent(TorchAgent):
             for name_in, param_in in mac_cell.named_parameters():
                 self.writer.add_histogram(name_in, param_in.clone().cpu().detach().data.numpy(), self.batch_iter)
                 #self.writer.add_histogram(name_in + "_grad", param_in.grad.clone().cpu().data.numpy(), self.batch_iter)
+                
+        print("done")
 
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), 10)
+        
+        print("Applying gradients...")
         self.optimizer.step()
+        print("Done")
         
         pred = answers_dist.argmax(dim=1)
         answers = [batch.observations[i]["label_candidates"][pred[i]] for i in range(label_indices.shape[0])]
