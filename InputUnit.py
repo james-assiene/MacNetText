@@ -74,7 +74,7 @@ class InputUnit(nn.Module):
             
         else:
             with torch.no_grad():
-                cws, _ = self.bert_model(questions).detach() #batch_size x max_question_length x hidden_size=768
+                cws, _ = self.bert_model(questions) #batch_size x max_question_length x hidden_size=768
         
         cws = self.cws_projection(cws) # batch x S x d
         q = cws.mean(dim=1) # batch_size x d
@@ -130,7 +130,7 @@ class InputUnit(nn.Module):
                 #segment_label_candidates_tensor = torch.zeros((1, len(label_candidate_tokens_ids)), dtype=torch.long)
                 with torch.no_grad():
                     encoded_layers, _ = self.bert_model(label_candidate_tokens_ids) #1 x sequence_length x hidden_size=768
-                    label_candidates_encoded[i].append(encoded_layers.mean(dim=1).squeeze(0).detach()) # list(batch_size) x num_candidates x hidden_size
+                    label_candidates_encoded[i].append(encoded_layers.mean(dim=1).squeeze(0)) # list(batch_size) x num_candidates x hidden_size
             
             label_candidates_encoded[i] = torch.stack(label_candidates_encoded[i]).to(self.device)
 #                indexed_tokens_supports.append(current_indexed_tokens_support)
@@ -159,9 +159,9 @@ class InputUnit(nn.Module):
             subtext_tokens_ids = torch.tensor([self.string_to_token_ids(subtext)]).to(self.device)
             
             with torch.no_grad():
-                encoded_layers, _ = self.bert_model(subtext_tokens_ids).detach() #1 x sequence_length=512 x hidden_size=768
+                encoded_layers, _ = self.bert_model(subtext_tokens_ids) #1 x sequence_length=512 x hidden_size=768
                 current_seq_len = encoded_layers.shape[1] #reason why we can't compute num_text_chunks dynamically : seq_len of encoded_layer will vary between the chunks. Since the resulting tensors won't have the same size, we can't stack them
-                encoded_text[i,:current_seq_len,:] = encoded_layers[0].detach()
+                encoded_text[i,:current_seq_len,:] = encoded_layers[0]
                 
         return encoded_text # num_text_chunks x sequence_length=512 x hidden_size=768
         
