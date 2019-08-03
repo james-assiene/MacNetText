@@ -80,6 +80,7 @@ class MacNetAgent(TorchAgent):
         
         print("hello")
         top_n = 3
+        retain_graph = False
         self.model.train()
         
         if self.on_text == False:
@@ -104,7 +105,7 @@ class MacNetAgent(TorchAgent):
         
         loss = self.criterion(answers_dist, label_indices)
         print("Starting backward...")
-        loss.backward(retain_graph=True)
+        loss.backward(retain_graph=retain_graph)
         print("Backward done")
         
         print("Saving to tensorboard...")

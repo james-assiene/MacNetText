@@ -59,7 +59,7 @@ class InputUnit(nn.Module):
                 max_text_length = len(observation["text"]) if len(observation["text"]) > max_text_length else max_text_length
                 
             questions = torch.zeros((len(context.observations), self.max_question_length), dtype=torch.long).to(self.device)
-            self.num_text_chunks = max_text_length // self.max_seq_len + 1
+            self.num_text_chunks = max_text_length // self.max_seq_len + 2
             
             for (i, query) in enumerate(queries):
                 questions[i,:len(query)] = torch.tensor(query, dtype=torch.long).to(self.device).detach()
@@ -75,6 +75,7 @@ class InputUnit(nn.Module):
         else:
             with torch.no_grad():
                 cws, _ = self.bert_model(questions) #batch_size x max_question_length x hidden_size=768
+#                cws = torch.rand((self.batch_size, self.max_question_length, 768))
         
         cws = self.cws_projection(cws) # batch x S x d
         q = cws.mean(dim=1) # batch_size x d
@@ -131,6 +132,7 @@ class InputUnit(nn.Module):
                 with torch.no_grad():
                     encoded_layers, _ = self.bert_model(label_candidate_tokens_ids) #1 x sequence_length x hidden_size=768
                     label_candidates_encoded[i].append(encoded_layers.mean(dim=1).squeeze(0)) # list(batch_size) x num_candidates x hidden_size
+#                    label_candidates_encoded[i].append(torch.rand((768)))
             
             label_candidates_encoded[i] = torch.stack(label_candidates_encoded[i]).to(self.device)
 #                indexed_tokens_supports.append(current_indexed_tokens_support)
@@ -139,6 +141,7 @@ class InputUnit(nn.Module):
         # Convert inputs to PyTorch tensors
         #segments_supports_tensors = torch.zeros((self.batch_size, self.max_seq_len), dtype=torch.long)
         contexts = torch.stack(contexts).to(self.device) # batch_size x num_text_chunks x sequence_length=512 x hidden_size=768
+#        contexts = torch.rand((self.batch_size, self.num_text_chunks, self.max_seq_len, 768)).to(self.device)
         
         return contexts, label_candidates_encoded
     

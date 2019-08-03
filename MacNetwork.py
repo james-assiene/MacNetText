@@ -53,6 +53,8 @@ class MacNetwork(nn.Module):
             mac_cell.C_past = self.C_past[:,:i+1,:].clone()
             mac_cell.M_past = self.M_past[:,:i+1,:].clone()
             ci, mi = mac_cell(ci, mi)
+            ci = ci.detach()
+            mi = mi.detach()
             self.C_past[:,i+1,:] = ci
             self.M_past[:,i+1,:] = mi
         
