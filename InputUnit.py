@@ -27,6 +27,8 @@ class InputUnit(nn.Module):
         self.num_text_chunks = 35
         self.device = device
         
+        print("Constructing InputUnit")
+        
         self.use_bert_encoder_for_question = use_bert_encoder_for_question
         
         self.question_encoder = nn.LSTM(input_size=self.d, hidden_size=self.d, bidirectional=True)
@@ -48,6 +50,7 @@ class InputUnit(nn.Module):
     
     def forward(self, context, question):
         
+        print("Tokenizing questions...")
         if self.on_text:
             queries = []
             max_text_length = 0
@@ -65,6 +68,7 @@ class InputUnit(nn.Module):
                 questions[i,:len(query)] = torch.tensor(query, dtype=torch.long).to(self.device).detach()
                 
         
+        print("Encoding questions...")
         if self.use_bert_encoder_for_question == False:
             question = self.embedding_layer(question)
             cws, (q, _) = self.question_encoder(question.transpose(0,1))
@@ -81,6 +85,7 @@ class InputUnit(nn.Module):
         q = cws.mean(dim=1) # batch_size x d
         label_candidates_encoded = None
         
+        print("Encoding text...")
         K = context
         if self.on_text == False:
             K = self.resnet101(K)
@@ -92,6 +97,8 @@ class InputUnit(nn.Module):
         
         if self.on_text == False:
             K = K.transpose(1,2).transpose(2,3) # batch x h x w x d
+            
+        print("Done")
         
         return K, q, cws, label_candidates_encoded
     
@@ -148,8 +155,10 @@ class InputUnit(nn.Module):
     def string_to_token_ids(self, string):
         
         string = "[CLS] " + string + " [SEP]"
-        tokenized_string = self.bert_tokenizer.tokenize(string)
-        token_ids = self.bert_tokenizer.convert_tokens_to_ids(tokenized_string)
+        
+        with torch.no_grad():
+            tokenized_string = self.bert_tokenizer.tokenize(string)
+            token_ids = self.bert_tokenizer.convert_tokens_to_ids(tokenized_string)
         
         return token_ids
     

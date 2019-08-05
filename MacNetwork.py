@@ -35,6 +35,8 @@ class MacNetwork(nn.Module):
         self.M_past = torch.zeros((self.batch_size, self.p + 1, self.d)).to(self.device)
         self.M_past[:,0,:] = self.m0
         
+        print("Constructing MacNetwork")
+        
         self.input_unit = InputUnit(self.device, self.vocab_size, self.on_text, self.max_seq_len, self.batch_size)
         self.mac_cells = [MacCell(self.device).to(self.device) for i in range(self.p)]
         self.output_unit = OutputUnit(self.n_labels)

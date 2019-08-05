@@ -60,7 +60,15 @@ class MacNetAgent(TorchAgent):
         self.batch_iter = 0
         self.device =  torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
-        self.model = MacNetwork(self.device, vocab_size=self.vocab_size, n_labels=self.n_labels, batch_size=self.batch_size, p=self.num_reasoning_hops)
+        print("CONSTRUCTING AGENT!")
+        
+        if shared:
+#            torch.set_num_threads(1)  # otherwise torch uses multiple cores for computation
+            self.model = shared['model']  # don't set up model again yourself
+        else:
+            self.model = MacNetwork(self.device, vocab_size=self.vocab_size, n_labels=self.n_labels, batch_size=self.batch_size, p=self.num_reasoning_hops)
+            self.model.share_memory()
+        
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
         
         self.writer = SummaryWriter()
@@ -74,7 +82,12 @@ class MacNetAgent(TorchAgent):
         kwargs['add_end'] = False
         #kwargs['split_lines'] = True
         return super().vectorize(*args, **kwargs)
-        
+    
+    
+    def share(self):
+        shared = super().share()
+        shared['model'] = self.model
+        return shared    
     
     def train_step(self, batch):
         
