@@ -60,18 +60,16 @@ class MacNetAgent(TorchAgent):
         self.batch_iter = 0
         self.device =  torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
-        print("CONSTRUCTING AGENT!")
-        
         if shared:
 #            torch.set_num_threads(1)  # otherwise torch uses multiple cores for computation
             self.model = shared['model']  # don't set up model again yourself
+            self.writer = shared["writer"]
         else:
             self.model = MacNetwork(self.device, vocab_size=self.vocab_size, n_labels=self.n_labels, batch_size=self.batch_size, p=self.num_reasoning_hops)
             self.model.share_memory()
+            self.writer = SummaryWriter()
         
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        
-        self.writer = SummaryWriter()
         
         self.model = self.model.to(self.device)
         
@@ -87,11 +85,11 @@ class MacNetAgent(TorchAgent):
     def share(self):
         shared = super().share()
         shared['model'] = self.model
+        shared['writer'] = self.writer
         return shared    
     
     def train_step(self, batch):
         
-        print("hello")
         top_n = 3
         retain_graph = False
         self.model.train()
@@ -108,6 +106,8 @@ class MacNetAgent(TorchAgent):
         
         self.optimizer.zero_grad()
         
+        
+        print("Starting forward...")
         answers_dist = self.model(contexts, questions).to(self.device)
         print("forward pass done")
         label_indices = torch.zeros(len(batch.observations), dtype=torch.long)
@@ -123,16 +123,13 @@ class MacNetAgent(TorchAgent):
         
         print("Saving to tensorboard...")
         
-        self.writer.add_scalar("data/loss", loss.detach(), self.batch_iter)
-        print("loss done")
-        
+        self.writer.add_scalar("data/loss", loss.detach(), self.batch_iter)        
 #        print("bert model...")
 #        for name, param in self.model.named_parameters():
 #            if "bert_model" not in name:
 #                self.writer.add_histogram(name, param.clone().cpu().detach().numpy(), self.batch_iter)
 #            #self.writer.add_histogram(name + "_grad", param.grad.clone().cpu().data.numpy(), self.batch_iter)
             
-        print("mac cells...")
         for mac_cell in self.model.mac_cells:
             for name_in, param_in in mac_cell.named_parameters():
                 self.writer.add_histogram(name_in, param_in.clone().cpu().detach().data.numpy(), self.batch_iter)
@@ -142,9 +139,7 @@ class MacNetAgent(TorchAgent):
 
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), 10)
         
-        print("Applying gradients...")
         self.optimizer.step()
-        print("Done")
         
         pred = answers_dist.argmax(dim=1)
         answers = [batch.observations[i]["label_candidates"][pred[i]] for i in range(label_indices.shape[0])]

@@ -27,8 +27,6 @@ class InputUnit(nn.Module):
         self.num_text_chunks = 35
         self.device = device
         
-        print("Constructing InputUnit")
-        
         self.use_bert_encoder_for_question = use_bert_encoder_for_question
         
         self.question_encoder = nn.LSTM(input_size=self.d, hidden_size=self.d, bidirectional=True)
@@ -50,7 +48,6 @@ class InputUnit(nn.Module):
     
     def forward(self, context, question):
         
-        print("Tokenizing questions...")
         if self.on_text:
             queries = []
             max_text_length = 0
@@ -68,7 +65,6 @@ class InputUnit(nn.Module):
                 questions[i,:len(query)] = torch.tensor(query, dtype=torch.long).to(self.device).detach()
                 
         
-        print("Encoding questions...")
         if self.use_bert_encoder_for_question == False:
             question = self.embedding_layer(question)
             cws, (q, _) = self.question_encoder(question.transpose(0,1))
@@ -117,7 +113,7 @@ class InputUnit(nn.Module):
         
     def build_text_encoder(self):
         self.bert_tokenizer = torch.hub.load('huggingface/pytorch-pretrained-BERT', 'bertTokenizer', 'bert-base-cased', do_basic_tokenize=False, max_len=self.max_seq_len)
-        self.bert_model = torch.hub.load('huggingface/pytorch-pretrained-BERT', 'bertModel', pretrained_model_name_or_path="bert-base-cased")
+        self.bert_model = torch.hub.load('huggingface/pytorch-pretrained-BERT', 'bertModel', pretrained_model_name_or_path="bert-base-cased").to(self.device)
         self.context_encoder = nn.Linear(in_features=768, out_features=self.d) #768 : hidden_size of transformer
         
         
