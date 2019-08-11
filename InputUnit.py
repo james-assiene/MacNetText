@@ -109,7 +109,7 @@ class InputUnit(nn.Module):
         self.bert_model.eval()
         
         contexts_splitted = list(contexts.split(self.max_seq_len - 2, 1)) # 2 for [CLS] and [SEP] ; list(num_text_chunks) x batch_size x 510
-        last_context = torch.zeros((contexts.shape[0], self.max_seq_len - 2), dtype=torch.long) # batch_size x 510
+        last_context = torch.zeros((contexts.shape[0], self.max_seq_len - 2), dtype=torch.long).to(self.device) # batch_size x 510
         last_context[:,:contexts_splitted[-1].shape[1]] = contexts_splitted[-1]
         contexts_splitted[-1] = last_context
         context = torch.stack(contexts_splitted).transpose(0,1) # batch_size x num_text_chunk x 510
