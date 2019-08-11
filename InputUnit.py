@@ -26,6 +26,8 @@ class InputUnit(nn.Module):
         self.max_question_length = 0
         self.num_text_chunks = 35
         self.device = device
+        self.CLS_index = 101
+        self.SEP_index = 102
         
         self.use_bert_encoder_for_question = use_bert_encoder_for_question
         
@@ -46,24 +48,7 @@ class InputUnit(nn.Module):
         
         
     
-    def forward(self, context, question):
-        
-        if self.on_text:
-            queries = []
-            max_text_length = 0
-            for observation in context.observations:
-                query = observation["query"]
-                query_tokens_ids = self.string_to_token_ids(query)
-                self.max_question_length = len(query_tokens_ids) if len(query_tokens_ids) > self.max_question_length else self.max_question_length
-                queries.append(query_tokens_ids)
-                max_text_length = len(observation["text"]) if len(observation["text"]) > max_text_length else max_text_length
-                
-            questions = torch.zeros((len(context.observations), self.max_question_length), dtype=torch.long).to(self.device)
-            self.num_text_chunks = max_text_length // self.max_seq_len + 2
-            
-            for (i, query) in enumerate(queries):
-                questions[i,:len(query)] = torch.tensor(query, dtype=torch.long).to(self.device).detach()
-                
+    def forward(self, context, question):                
         
         if self.use_bert_encoder_for_question == False:
             question = self.embedding_layer(question)
@@ -74,7 +59,10 @@ class InputUnit(nn.Module):
             
         else:
             with torch.no_grad():
-                cws, _ = self.bert_model(questions) #batch_size x max_question_length x hidden_size=768
+                question = F.pad(input=question, pad=(1,1)) # batch_size x max_seq_len
+                question[:,0] = self.CLS_index
+                question[:,-1] = self.SEP_index
+                cws, _ = self.bert_model(question) #batch_size x max_question_length x hidden_size=768
 #                cws = torch.rand((self.batch_size, self.max_question_length, 768))
         
         cws = self.cws_projection(cws) # batch x S x d
@@ -112,64 +100,30 @@ class InputUnit(nn.Module):
                 nn.ELU())
         
     def build_text_encoder(self):
-        self.bert_tokenizer = torch.hub.load('huggingface/pytorch-pretrained-BERT', 'bertTokenizer', 'bert-base-cased', do_basic_tokenize=False, max_len=self.max_seq_len)
-        self.bert_model = torch.hub.load('huggingface/pytorch-pretrained-BERT', 'bertModel', pretrained_model_name_or_path="bert-base-cased").to(self.device)
+        self.bert_model = torch.hub.load('huggingface/pytorch-pretrained-BERT', 'bertModel', pretrained_model_name_or_path="bert-base-uncased").to(self.device)
         self.context_encoder = nn.Linear(in_features=768, out_features=self.d) #768 : hidden_size of transformer
         
         
-    def encode_text(self, batch):
+    def encode_text(self, contexts):
         
-#        padded_context = torch.zeros((self.batch_size, self.max_seq_len), dtype=torch.long)
         self.bert_model.eval()
-        label_candidates_encoded = []
-        contexts = []
         
-        for (i, observation) in enumerate(batch.observations):
-            encoded_text = self.encode_large_text(" ".join(observation["supports"])) # num_text_chunks x sequence_length=512 x hidden_size=768
-            contexts.append(encoded_text)
-            
-            label_candidates_encoded.append([])
-            for label_candidate in observation["label_candidates"]:
-                label_candidate_tokens_ids = torch.tensor([self.string_to_token_ids(label_candidate)]).to(self.device)
-                #segment_label_candidates_tensor = torch.zeros((1, len(label_candidate_tokens_ids)), dtype=torch.long)
-                with torch.no_grad():
-                    encoded_layers, _ = self.bert_model(label_candidate_tokens_ids) #1 x sequence_length x hidden_size=768
-                    label_candidates_encoded[i].append(encoded_layers.mean(dim=1).squeeze(0)) # list(batch_size) x num_candidates x hidden_size
-#                    label_candidates_encoded[i].append(torch.rand((768)))
-            
-            label_candidates_encoded[i] = torch.stack(label_candidates_encoded[i]).to(self.device)
-#                indexed_tokens_supports.append(current_indexed_tokens_support)
-#                segments_ids_supports.append([0] * len(current_indexed_tokens_support))
+        contexts_splitted = list(contexts.split(self.max_seq_len - 2, 1)) # 2 for [CLS] and [SEP] ; list(num_text_chunks) x batch_size x 510
+        last_context = torch.zeros((contexts.shape[0], self.max_seq_len - 2), dtype=torch.long) # batch_size x 510
+        last_context[:,:contexts_splitted[-1].shape[1]] = contexts_splitted[-1]
+        contexts_splitted[-1] = last_context
+        context = torch.stack(contexts_splitted).transpose(0,1) # batch_size x num_text_chunk x 510
+        context = F.pad(input=context, pad=(1,1)) # batch_size x num_text_chunks x max_seq_len
+        context[:,:,0] = self.CLS_index
+        context[:,:,-1] = self.SEP_index
         
-        # Convert inputs to PyTorch tensors
-        #segments_supports_tensors = torch.zeros((self.batch_size, self.max_seq_len), dtype=torch.long)
-        contexts = torch.stack(contexts).to(self.device) # batch_size x num_text_chunks x sequence_length=512 x hidden_size=768
-#        contexts = torch.rand((self.batch_size, self.num_text_chunks, self.max_seq_len, 768)).to(self.device)
-        
-        return contexts, label_candidates_encoded
-    
-    def string_to_token_ids(self, string):
-        
-        string = "[CLS] " + string + " [SEP]"
+        self.num_text_chunks = context.shape[1]
+        self.batch_size = context.shape[0]
         
         with torch.no_grad():
-            tokenized_string = self.bert_tokenizer.tokenize(string)
-            token_ids = self.bert_tokenizer.convert_tokens_to_ids(tokenized_string)
+            last_hidden_state, _ = self.bert_model(context.reshape(-1, self.max_seq_len)) #1 x sequence_length=512 x hidden_size=768
+            encoded_text = last_hidden_state.reshape(-1, self.num_text_chunks, self.max_seq_len, 768)
         
-        return token_ids
+        
+        return encoded_text, None
     
-    def encode_large_text(self, text):
-        
-        subtext_length = self.max_seq_len - 2 # 2 for [CLS] and [SEP]
-        subtexts = [text[i:i+subtext_length] for i in range(0, len(text), subtext_length)]
-        encoded_text = torch.zeros((self.num_text_chunks, self.max_seq_len, 768)).to(self.device)
-        for (i, subtext) in enumerate(subtexts):
-            subtext_tokens_ids = torch.tensor([self.string_to_token_ids(subtext)]).to(self.device)
-            
-            with torch.no_grad():
-                encoded_layers, _ = self.bert_model(subtext_tokens_ids) #1 x sequence_length=512 x hidden_size=768
-                current_seq_len = encoded_layers.shape[1] #reason why we can't compute num_text_chunks dynamically : seq_len of encoded_layer will vary between the chunks. Since the resulting tensors won't have the same size, we can't stack them
-                encoded_text[i,:current_seq_len,:] = encoded_layers[0]
-                
-        return encoded_text # num_text_chunks x sequence_length=512 x hidden_size=768
-        
