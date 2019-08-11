@@ -22,7 +22,6 @@ class InputUnit(nn.Module):
         self.vocab_size = vocab_size
         self.on_text = on_text
         self.max_seq_len = max_seq_len
-        self.batch_size = batch_size
         self.max_question_length = 0
         self.num_text_chunks = 35
         self.device = device
@@ -63,7 +62,6 @@ class InputUnit(nn.Module):
                 question[:,0] = self.CLS_index
                 question[:,-1] = self.SEP_index
                 cws, _ = self.bert_model(question) #batch_size x max_question_length x hidden_size=768
-#                cws = torch.rand((self.batch_size, self.max_question_length, 768))
         
         cws = self.cws_projection(cws) # batch x S x d
         q = cws.mean(dim=1) # batch_size x d
@@ -118,7 +116,6 @@ class InputUnit(nn.Module):
         context[:,:,-1] = self.SEP_index
         
         self.num_text_chunks = context.shape[1]
-        self.batch_size = context.shape[0]
         
         with torch.no_grad():
             last_hidden_state, _ = self.bert_model(context.reshape(-1, self.max_seq_len)) #1 x sequence_length=512 x hidden_size=768

@@ -23,10 +23,19 @@ class MacNetwork(nn.Module):
         self.vocab_size = vocab_size
         self.n_labels = n_labels
         self.p = p
-        self.batch_size = batch_size
         self.on_text = on_text
         self.max_seq_len = max_seq_len
         self.device = device
+        
+        self.init_hidden(batch_size)
+        
+        self.input_unit = InputUnit(self.device, self.vocab_size, self.on_text, self.max_seq_len)
+        self.mac_cells = [MacCell(self.device).to(self.device) for i in range(self.p)]
+        self.output_unit = OutputUnit(self.n_labels)
+        
+    def init_hidden(self, batch_size):
+        
+        self.batch_size = batch_size
         
         self.m0 = torch.rand((self.batch_size, self.d)).to(self.device)
         self.c0 = torch.rand((self.batch_size, self.d)).to(self.device)
@@ -34,11 +43,6 @@ class MacNetwork(nn.Module):
         self.C_past[:,0,:] = self.c0
         self.M_past = torch.zeros((self.batch_size, self.p + 1, self.d)).to(self.device)
         self.M_past[:,0,:] = self.m0
-        
-        self.input_unit = InputUnit(self.device, self.vocab_size, self.on_text, self.max_seq_len, self.batch_size)
-        self.mac_cells = [MacCell(self.device).to(self.device) for i in range(self.p)]
-        self.output_unit = OutputUnit(self.n_labels)
-        
         
     
     def forward(self, context, question):
