@@ -73,7 +73,8 @@ class MacNetAgent(TorchRankerAgent):
         #kwargs['split_lines'] = True
         obs = super().vectorize(*args, **kwargs)
         
-        print(obs.keys())
+        if "supports" not in obs:
+            return obs
         
         obs["support"] = '\n'.join(obs['supports'])
         obs["support_vec"] = self._vectorize_text(obs["support"], kwargs["add_start"], kwargs["add_end"], kwargs["text_truncate"])
