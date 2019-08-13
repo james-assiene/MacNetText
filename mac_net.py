@@ -56,7 +56,8 @@ class MacNetAgent(TorchRankerAgent):
         if opt['tensorboard_log'] is True:
             self.writer = TensorboardLogger(opt)
             
-        self.criterion = nn.CrossEntropyLoss()
+         # default one does not average
+        self.rank_loss = torch.nn.CrossEntropyLoss(reduce=True, size_average=True)
         torch.autograd.set_detect_anomaly(True)
         
         
