@@ -204,22 +204,3 @@ class MacNetAgent(TorchRankerAgent):
         
     
     
-
-
-from parlai.scripts.train_model import TrainLoop, setup_args
-
-if __name__ == '__main__':
-    parser = setup_args()
-    opt = parser.parse_args()
-    opt["tensorboard_log"] = True
-    opt["model_file"] = "m1"
-    opt["tensorboard_tag"] = "task,batchsize"
-    opt["tensorboard_metrics"] = "all"
-    opt["metrics"] = "all"
-    opt["model"] = "mac_net"
-    opt["no_cuda"] = True
-    opt['history_size'] = 1
-    opt['truncate'] = -1
-    opt["rank_candidates"] = False
-    TrainLoop(opt).train()
-
