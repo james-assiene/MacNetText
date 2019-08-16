@@ -29,7 +29,7 @@ class OutputUnit(nn.Module):
     def forward(self, mp, q, label_candidates_encoded=None):
         
         #mp : batch x d
-        #q : batch x 2d
+        #q : batch x d
         
         out = self.linear1(torch.cat([mp, q], dim=1))
         out = F.elu(out)

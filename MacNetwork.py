@@ -27,8 +27,6 @@ class MacNetwork(nn.Module):
         self.max_seq_len = max_seq_len
         self.device = device
         
-        self.init_hidden(batch_size)
-        
         self.input_unit = InputUnit(self.device, self.vocab_size, self.on_text, self.max_seq_len)
         self.mac_cells = [MacCell(self.device).to(self.device) for i in range(self.p)]
         self.output_unit = OutputUnit(self.n_labels)
@@ -63,5 +61,5 @@ class MacNetwork(nn.Module):
             self.M_past[:,i+1,:] = mi
         
         
-        ans = self.output_unit(mi, ci, label_candidates_encoded)
+        ans = self.output_unit(mi, q, label_candidates_encoded)
         return ans

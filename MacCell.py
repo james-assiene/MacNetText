@@ -26,7 +26,7 @@ class MacCell(nn.Module):
         self.M_past = None
         self.C_past = None
         
-        self.control_qi = nn.Linear(1 * self.d, self.d) # 2 in original implementation (bi-lstm on the question)
+        self.control_qi = nn.Linear(1 * self.d, self.d) # 2 in original implementation (bi-lstm on the question). 1 because of BERT (mean on the sequence length axis)
         self.cqi_linear = nn.Linear(2 * self.d, self.d)
         self.cais_linear = nn.Linear(self.d, 1)
         
@@ -56,7 +56,7 @@ class MacCell(nn.Module):
         return ci
     
     def read(self, mi_1, K, ci):
-        #K : batch x H x W x d
+        #K : batch x H x W x d or batch_size x num_text_chunks x max_seq_len=512 x d
         #mi_1 : batch x d
         #ci :batch x d
         
@@ -65,9 +65,10 @@ class MacCell(nn.Module):
         
         rai = self.memory_read_ci_i(ci.unsqueeze(1).unsqueeze_(1) * Ii_prime) # batch x H x W x d
         
-        rvi = F.softmax(rai, dim=3)
+        rvi = F.softmax(rai, dim=1) # batch x H x W x d
+        rvi = F.softmax(rvi, dim=2) # batch x H x W x d
         
-        ri = (rvi * K).sum(dim=1).sum(dim=1)
+        ri = (rvi * K).sum(dim=1).sum(dim=1) # batch x d
         
         return ri
         
@@ -85,7 +86,7 @@ class MacCell(nn.Module):
         #C_past = C[:,:i,:] # batch x i x d
         #M_past = M[:,:i,:] # batch x i x d
         ci_cj = ci.unsqueeze(1) * C_past # batch x i x d
-        saij = self.memory_write_ci_cj(ci_cj) # batch x i x 1
+        saij = F.softmax(self.memory_write_ci_cj(ci_cj), dim=1) # batch x i x 1
         mi_sa = (saij * M_past).sum(dim=1) # bacth x d
         mi_prime = self.memory_write_mi_sa(mi_sa) + self.memory_write_mi_info(mi_info) # batch x d
         ci_prime = self.memory_write_ci(ci) # batch x 1

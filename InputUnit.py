@@ -75,7 +75,7 @@ class InputUnit(nn.Module):
         else:
             K, label_candidates_encoded = self.encode_text(K)
         
-        K = self.context_encoder(K)
+        K = self.context_encoder(K) #batch_size x num_text_chunks x max_seq_len=512 x d
         
         if self.on_text == False:
             K = K.transpose(1,2).transpose(2,3) # batch x h x w x d
@@ -119,7 +119,7 @@ class InputUnit(nn.Module):
         
         with torch.no_grad():
             last_hidden_state, _ = self.bert_model(context.reshape(-1, self.max_seq_len)) #1 x sequence_length=512 x hidden_size=768
-            encoded_text = last_hidden_state.reshape(-1, self.num_text_chunks, self.max_seq_len, 768)
+            encoded_text = last_hidden_state.reshape(-1, self.num_text_chunks, self.max_seq_len, 768) # batch_size x num_text_chunks x max_seq_len=512 x hidden_size=768
         
         
         return encoded_text, None
