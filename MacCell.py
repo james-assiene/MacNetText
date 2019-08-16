@@ -25,6 +25,7 @@ class MacCell(nn.Module):
         self.K = None
         self.M_past = None
         self.C_past = None
+        self.softmax2d = nn.Softmax2d()
         
         self.control_qi = nn.Linear(1 * self.d, self.d) # 2 in original implementation (bi-lstm on the question). 1 because of BERT (mean on the sequence length axis)
         self.cqi_linear = nn.Linear(2 * self.d, self.d)
@@ -65,8 +66,7 @@ class MacCell(nn.Module):
         
         rai = self.memory_read_ci_i(ci.unsqueeze(1).unsqueeze_(1) * Ii_prime) # batch x H x W x d
         
-        rvi = F.softmax(rai, dim=1) # batch x H x W x d
-        rvi = F.softmax(rvi, dim=2) # batch x H x W x d
+        rvi = self.softmax2d(rai.transpose(1,3)).transpose(1,3) # batch x H x W x d
         
         ri = (rvi * K).sum(dim=1).sum(dim=1) # batch x d
         
