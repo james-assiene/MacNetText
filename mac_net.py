@@ -201,7 +201,8 @@ class MacNetAgent(TorchRankerAgent):
     def eval_step(self, batch):
         
         self.model.init_hidden(len(batch.observations))
-        super().eval_step(batch)
+        
+        return super().eval_step(batch)
         
     
     
