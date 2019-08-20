@@ -185,7 +185,7 @@ class MacNetAgent(TorchRankerAgent):
         
         self.vocab_size = 645575  
         self.n_labels = 100
-        self.learning_rate = 1e-4
+        self.learning_rate = self.opt["learningrate"]
         self.batch_size = self.opt["batchsize"]
         self.num_reasoning_hops = self.opt["num_reasoning_hops"]
         self.max_seq_length = 512
