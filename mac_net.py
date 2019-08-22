@@ -190,7 +190,7 @@ class MacNetAgent(TorchRankerAgent):
         self.learning_rate = self.opt["learningrate"]
         self.batch_size = self.opt["batchsize"]
         self.num_reasoning_hops = self.opt["num_reasoning_hops"]
-        self.save_mac_cells_to_tensorboard = self.opt["ma_-to_tensorboard"]
+        self.save_mac_cells_to_tensorboard = self.opt["mac_to_tensorboard"]
         self.max_seq_length = 512
         self.on_text = True
         self.batch_iter = 0
