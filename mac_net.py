@@ -45,6 +45,7 @@ class MacNetAgent(TorchRankerAgent):
         
         agent.add_argument("-dim", "--dimension", type=int, default=512, help="Dimension for all layers")
         agent.add_argument("-nrh", "--num-reasoning-hops", type=int, default=12, help="Number of reasoning hops")
+        agent.add_argument("-mtt", "--mac-to-tensorboard", type=bool, default=False, help="Save MAC Cells weights to tensorboard")
             
         MacNetAgent.dictionary_class().add_cmdline_args(argparser)
         
@@ -59,7 +60,7 @@ class MacNetAgent(TorchRankerAgent):
          # default one does not average
         self.rank_loss = torch.nn.CrossEntropyLoss(reduce=True, size_average=True)
         torch.autograd.set_detect_anomaly(True)
-        
+        torch.manual_seed(123)
         
         
     @staticmethod
@@ -135,11 +136,12 @@ class MacNetAgent(TorchRankerAgent):
         self.model.init_hidden(len(batch.observations))
         out = super().train_step(batch)
         
-
-        for mac_cell in self.model.mac_cells:
-            for name_in, param_in in mac_cell.named_parameters():
-                self.writer.add_histogram(name_in, param_in.clone().cpu().detach().data.numpy(), self.batch_iter)
-                #self.writer.add_histogram(name_in + "_grad", param_in.grad.clone().cpu().data.numpy(), self.batch_iter)
+        if self.save_mac_cells_to_tensorboard:
+            for mac_cell in self.model.mac_cells:
+                for name_in, param_in in mac_cell.named_parameters():
+                    self.writer.add_histogram(name_in, param_in.clone().cpu().detach().data.numpy(), self.batch_iter)
+                    #self.writer.add_histogram(name_in + "_grad", param_in.grad.clone().cpu().data.numpy(), self.batch_iter)
+        
         
         return out
         
@@ -188,6 +190,7 @@ class MacNetAgent(TorchRankerAgent):
         self.learning_rate = self.opt["learningrate"]
         self.batch_size = self.opt["batchsize"]
         self.num_reasoning_hops = self.opt["num_reasoning_hops"]
+        self.save_mac_cells_to_tensorboard = self.opt["ma_-to_tensorboard"]
         self.max_seq_length = 512
         self.on_text = True
         self.batch_iter = 0
