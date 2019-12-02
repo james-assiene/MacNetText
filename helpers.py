@@ -4,7 +4,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 from parlai.core.torch_ranker_agent import TorchRankerAgent
-from parlai.core.utils import _ellipse, neginf, fp16_optimizer_wrapper
+from parlai.utils.misc import _ellipse, neginf, fp16_optimizer_wrapper
 
 try:
     from pytorch_pretrained_bert.modeling import BertLayer, BertConfig
