@@ -17,10 +17,10 @@ from torchvision import transforms
 from pytorch_pretrained_bert import BertConfig
 
 from parlai.core.torch_ranker_agent import TorchRankerAgent
-from parlai.core.utils import padded_3d
+from parlai.utils.misc import padded_3d
 from parlai.core.logs import TensorboardLogger
 
-from parlai.core.utils import (
+from parlai.utils.misc import (
     AttrDict,
     argsort,
     padded_tensor,
