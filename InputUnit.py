@@ -98,7 +98,7 @@ class InputUnit(nn.Module):
                 nn.ELU())
         
     def build_text_encoder(self):
-        self.bert_model = torch.hub.load('huggingface/pytorch-pretrained-BERT', 'bertModel', pretrained_model_name_or_path="bert-base-uncased").to(self.device)
+        self.bert_model = torch.hub.load('huggingface/pytorch-pretrained-BERT', 'model', pretrained_model_name_or_path="bert-base-uncased").to(self.device)
         self.context_encoder = nn.Linear(in_features=768, out_features=self.d) #768 : hidden_size of transformer
         
         
