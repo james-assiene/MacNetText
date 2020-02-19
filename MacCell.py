@@ -12,7 +12,7 @@ import torch.nn.functional as F
 
 class MacCell(nn.Module):
     
-    def __init__(self, device, d=512):
+    def __init__(self, device, use_lstm=True, d=512):
         
         super(MacCell, self).__init__()
         self.d = d # Dimension of control and memory states
@@ -27,7 +27,7 @@ class MacCell(nn.Module):
         self.C_past = None
         self.softmax2d = nn.Softmax2d()
         
-        self.control_qi = nn.Linear(1 * self.d, self.d) # 2 in original implementation (bi-lstm on the question). 1 because of BERT (mean on the sequence length axis)
+        self.control_qi = nn.Linear((2 ** use_lstm) * self.d, self.d) # 2 ** 1 = 2  if we use bi-lstm for the question. 2 ** 0 = 1 if not i.e. BERT only (mean on the sequence length axis)
         self.cqi_linear = nn.Linear(2 * self.d, self.d)
         self.cais_linear = nn.Linear(self.d, 1)
         

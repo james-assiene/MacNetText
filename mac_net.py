@@ -190,13 +190,14 @@ class MacNetAgent(TorchRankerAgent):
         self.learning_rate = self.opt["learningrate"]
         self.batch_size = self.opt["batchsize"]
         self.num_reasoning_hops = self.opt["num_reasoning_hops"]
+        self.d = self.opt["dimension"]
         self.save_mac_cells_to_tensorboard = self.opt["mac_to_tensorboard"]
         self.max_seq_length = 512
         self.on_text = True
         self.batch_iter = 0
         
         self.device =  torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model = MacNetwork(self.device, vocab_size=self.vocab_size, n_labels=self.n_labels, batch_size=self.batch_size, p=self.num_reasoning_hops)
+        self.model = MacNetwork(self.device, vocab_size=self.vocab_size, n_labels=self.n_labels, batch_size=self.batch_size, p=self.num_reasoning_hops, d=self.d)
         self.model.share_memory()
         self.writer = SummaryWriter()
             

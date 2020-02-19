@@ -13,7 +13,7 @@ from torchvision import datasets, models, transforms
 
 class InputUnit(nn.Module):
     
-    def __init__(self, device, vocab_size, on_text=True, max_seq_len=512, batch_size=2, use_bert_encoder_for_question=True, d=512):
+    def __init__(self, device, vocab_size, on_text=True, max_seq_len=512, batch_size=2, use_bert_encoder_for_question=True, d=512, use_lstm=True):
         
         super(InputUnit, self).__init__()
         self.d = d # Dimension of control and memory states
@@ -27,17 +27,23 @@ class InputUnit(nn.Module):
         self.device = device
         self.CLS_index = 101
         self.SEP_index = 102
+        self.use_lstm = True
+        self.BERT_HIDDEN_SIZE = 768
         
         self.use_bert_encoder_for_question = use_bert_encoder_for_question
         
-        self.question_encoder = nn.LSTM(input_size=self.d, hidden_size=self.d, bidirectional=True)
         self.embedding_layer = nn.Embedding(num_embeddings=self.vocab_size, embedding_dim=self.d)
         
         if self.use_bert_encoder_for_question == False:
+            self.question_encoder = nn.LSTM(input_size=self.d, hidden_size=self.d, bidirectional=True)
+            self.cws_projection = nn.Linear(self.d * 2, self.d)
+
+        elif self.use_lstm:
+            self.question_encoder = nn.LSTM(input_size=self.d, hidden_size=self.d, bidirectional=True)
             self.cws_projection = nn.Linear(self.d * 2, self.d)
             
         else:
-            self.cws_projection = nn.Linear(768, self.d)
+            self.cws_projection = nn.Linear(self.BERT_HIDDEN_SIZE, self.d)
         
         if self.on_text == False:
             self.build_img_encoder()
@@ -61,10 +67,15 @@ class InputUnit(nn.Module):
                 question = F.pad(input=question, pad=(1,1)) # batch_size x max_seq_len
                 question[:,0] = self.CLS_index
                 question[:,-1] = self.SEP_index
-                cws, _ = self.bert_model(question) #batch_size x max_question_length x hidden_size=768
+                cws, _ = self.bert_model(question) #batch_size x max_question_length x hidden_size=self.BERT_HIDDEN_SIZE
         
         cws = self.cws_projection(cws) # batch x S x d
-        q = cws.mean(dim=1) # batch_size x d
+        if self.use_lstm:
+            _, (q, _) = self.question_encoder(cws.transpose(0,1))
+            q = q.transpose(0,1) # batch x 2 x d
+            q = q.reshape(q.shape[0], -1) # batch x 2d
+        else:
+            q = cws.mean(dim=1) # batch_size x d
         label_candidates_encoded = None
         
         print("Encoding text...")
@@ -99,7 +110,7 @@ class InputUnit(nn.Module):
         
     def build_text_encoder(self):
         self.bert_model = torch.hub.load('huggingface/pytorch-pretrained-BERT', 'model', pretrained_model_name_or_path="bert-base-uncased").to(self.device)
-        self.context_encoder = nn.Linear(in_features=768, out_features=self.d) #768 : hidden_size of transformer
+        self.context_encoder = nn.Linear(in_features=self.BERT_HIDDEN_SIZE, out_features=self.d) #self.BERT_HIDDEN_SIZE : hidden_size of transformer
         
         
     def encode_text(self, contexts):
@@ -118,8 +129,8 @@ class InputUnit(nn.Module):
         self.num_text_chunks = context.shape[1]
         
         with torch.no_grad():
-            last_hidden_state, _ = self.bert_model(context.reshape(-1, self.max_seq_len)) #1 x sequence_length=512 x hidden_size=768
-            encoded_text = last_hidden_state.reshape(-1, self.num_text_chunks, self.max_seq_len, 768) # batch_size x num_text_chunks x max_seq_len=512 x hidden_size=768
+            last_hidden_state, _ = self.bert_model(context.reshape(-1, self.max_seq_len)) #1 x sequence_length=512 x hidden_size=self.BERT_HIDDEN_SIZE
+            encoded_text = last_hidden_state.reshape(-1, self.num_text_chunks, self.max_seq_len, self.BERT_HIDDEN_SIZE) # batch_size x num_text_chunks x max_seq_len=512 x hidden_size=self.BERT_HIDDEN_SIZE
         
         
         return encoded_text, None
