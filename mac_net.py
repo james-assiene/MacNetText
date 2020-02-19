@@ -21,12 +21,14 @@ from parlai.utils.torch import padded_3d
 from parlai.core.logs import TensorboardLogger
 
 from parlai.utils.torch import (
-    AttrDict,
     argsort,
     padded_tensor,
+)
+
+from parlai.utils.misc import (
+    AttrDict,
     warn_once,
-    round_sigfigs,
-    fp16_optimizer_wrapper,
+    round_sigfigs
 )
 
 from .MacNetwork import MacNetwork
