@@ -30,7 +30,7 @@ class MacNetwork(nn.Module):
         
         self.input_unit = InputUnit(self.device, self.vocab_size, self.on_text, self.max_seq_len, d=self.d)
         self.mac_cells = [MacCell(self.device, self.use_lstm, self.d).to(self.device) for i in range(self.p)]
-        self.output_unit = OutputUnit(self.n_labels, d=self.d)
+        self.output_unit = OutputUnit(self.n_labels, d=self.d, use_lstm=self.use_lstm)
         
     def init_hidden(self, batch_size):
         

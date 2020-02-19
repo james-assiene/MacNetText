@@ -12,13 +12,17 @@ import torch.nn.functional as F
 
 class OutputUnit(nn.Module):
     
-    def __init__(self, n_labels, d=512, score_candidates=True, hidden_size_candidate=768):
+    def __init__(self, n_labels, d=512, use_lstm=True, score_candidates=True, hidden_size_candidate=768):
         
         super(OutputUnit, self).__init__()
         
         self.d = d
-        
-        self.linear1 = nn.Linear(2 * self.d, self.d)
+
+        if use_lstm:
+            self.linear1 = nn.Linear(3 * self.d, self.d)
+
+        else:
+            self.linear1 = nn.Linear(2 * self.d, self.d)
         
         if score_candidates:
             self.linear2 = nn.Linear(self.d, hidden_size_candidate)
