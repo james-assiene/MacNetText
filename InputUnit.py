@@ -40,6 +40,7 @@ class InputUnit(nn.Module):
 
         elif self.use_lstm:
             self.question_encoder = nn.LSTM(input_size=self.d, hidden_size=self.d, bidirectional=True)
+            self.cws_projection = nn.Linear(self.BERT_HIDDEN_SIZE, self.d)
             
         else:
             self.cws_projection = nn.Linear(self.BERT_HIDDEN_SIZE, self.d)
