@@ -16,7 +16,7 @@ from .MacCell import MacCell
 
 class MacNetwork(nn.Module):
     
-    def __init__(self, device, vocab_size=3, n_labels=1, , use_lstm=True, batch_size=2, d=512, p=12, on_text=True, max_seq_len=512):
+    def __init__(self, device, vocab_size=3, n_labels=1, use_lstm=True, batch_size=2, d=512, p=12, on_text=True, max_seq_len=512):
         
         super(MacNetwork, self).__init__()
         self.d = d # Dimension of control and memory states
