@@ -32,7 +32,7 @@ from parlai.utils.misc import (
 )
 
 from .MacNetwork import MacNetwork
-from .bert_dictionary import BertDictionaryAgent
+from parlai.agents.bert_ranker.bert_dictionary import BertDictionaryAgent
 
 from tensorboardX import SummaryWriter
 
