@@ -30,6 +30,9 @@ class OutputUnit(nn.Module):
         
         #mp : batch x d
         #q : batch x d
+
+        print("mp : ", mp.shape)
+        print("q : ", q.shape)
         
         out = self.linear1(torch.cat([mp, q], dim=1))
         out = F.elu(out)
