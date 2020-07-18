@@ -32,9 +32,8 @@ class InputUnit(nn.Module):
         
         self.use_bert_encoder_for_question = use_bert_encoder_for_question
         
-        self.embedding_layer = nn.Embedding(num_embeddings=self.vocab_size, embedding_dim=self.d)
-        
         if self.use_bert_encoder_for_question == False:
+            self.embedding_layer = nn.Embedding(num_embeddings=self.vocab_size, embedding_dim=self.d)
             self.question_encoder = nn.LSTM(input_size=self.d, hidden_size=self.d, bidirectional=True)
             self.cws_projection = nn.Linear(self.d * 2, self.d)
 
@@ -110,6 +109,8 @@ class InputUnit(nn.Module):
         
     def build_text_encoder(self):
         self.bert_model = torch.hub.load('huggingface/pytorch-pretrained-BERT', 'model', pretrained_model_name_or_path="bert-base-uncased").to(self.device)
+        for param in self.bert_model.parameters():
+            param.requires_grad = False
         self.context_encoder = nn.Linear(in_features=self.BERT_HIDDEN_SIZE, out_features=self.d) #self.BERT_HIDDEN_SIZE : hidden_size of transformer
         
         

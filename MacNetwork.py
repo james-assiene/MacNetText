@@ -29,12 +29,8 @@ class MacNetwork(nn.Module):
         self.use_lstm = use_lstm
         
         self.input_unit = InputUnit(self.device, self.vocab_size, self.on_text, self.max_seq_len, d=self.d)
-        self.mac_cells = [MacCell(self.device, self.use_lstm, self.d).to(self.device) for i in range(self.p)]
+        self.mac_cells = nn.ModuleList([MacCell(self.device, self.use_lstm, self.d).to(self.device) for i in range(self.p)])
         self.output_unit = OutputUnit(self.n_labels, d=self.d, use_lstm=self.use_lstm)
-
-        print(self.input_unit)
-        print(self.output_unit)
-        print(self.mac_cells[0])
         
     def init_hidden(self, batch_size):
         
@@ -61,10 +57,10 @@ class MacNetwork(nn.Module):
             mac_cell.C_past = self.C_past[:,:i+1,:].clone()
             mac_cell.M_past = self.M_past[:,:i+1,:].clone()
             ci, mi = mac_cell(ci, mi)
-            ci = ci.detach()
-            mi = mi.detach()
-            self.C_past[:,i+1,:] = ci
-            self.M_past[:,i+1,:] = mi
+            # ci = ci.detach()
+            # mi = mi.detach()
+            self.C_past[:,i+1,:] = ci.detach()
+            self.M_past[:,i+1,:] = mi.detach()
         
         
         ans = self.output_unit(mi, q, label_candidates_encoded)

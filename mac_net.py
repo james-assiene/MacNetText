@@ -179,6 +179,10 @@ class MacNetAgent(TorchRankerAgent):
         
         
         scores = label_candidates_encoded.bmm(out.unsqueeze(2)).squeeze(2)
+
+        # if self.batch_index % 100 == 0:
+        #     torch.save(self.model.state_dict(), f"/scratch/jassiene/MacNetTextExperiments/model_{self.batch_index}.pth")
+        # self.batch_index+= 1
         
         return scores
         
@@ -188,7 +192,8 @@ class MacNetAgent(TorchRankerAgent):
         object `self.model`.
         """
         
-        self.vocab_size = 645575  
+        self.vocab_size = 645575
+        self.batch_index = 0  
         self.n_labels = 100
         self.learning_rate = self.opt["learningrate"]
         self.batch_size = self.opt["batchsize"]
@@ -201,6 +206,7 @@ class MacNetAgent(TorchRankerAgent):
         
         self.device =  torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = MacNetwork(self.device, vocab_size=self.vocab_size, n_labels=self.n_labels, batch_size=self.batch_size, p=self.num_reasoning_hops, d=self.d)
+        print(self.model)
         self.model.share_memory()
         self.writer = SummaryWriter()
             
