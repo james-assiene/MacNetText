@@ -135,7 +135,6 @@ class MacNetAgent(TorchRankerAgent):
     
     def train_step(self, batch):
         
-        self.model.init_hidden(len(batch.observations))
         out = super().train_step(batch)
         
         if self.save_mac_cells_to_tensorboard:
@@ -156,8 +155,6 @@ class MacNetAgent(TorchRankerAgent):
         encoding of the candidate vectors), you may use these instead of
         calling self.model on `cand_vecs`.
         """
-        
-        self.model.init_hidden(len(batch.observations))
         
         if self.on_text == False:
             image_preprocessing = transforms.Compose([transforms.Resize((224,224)), transforms.ToTensor()])

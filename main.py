@@ -7,13 +7,9 @@ Created on Thu Jun 27 15:05:33 2019
 """
 
 import torch
-import torchtext
-import torchtext.data as data
+import nlp
 
-wikihop_train = data.TabularDataset(path='wikihop/train.json', format='json',
-                                fields={"query": ("query", data.Field(sequential=False)),
-                                        "answer": ("answer", data.Field(sequential=False)),
-                                        "candidates": ("candidates", data.Field(sequential=False)),
-                                        "supports": ("supports", data.Field(sequential=False))})
-
-train_iter = data.BucketIterator(dataset=wikihop_train, batch_size=32)
+dataset = nlp.load_dataset("qangaroo", "wikihop")
+train_set = dataset["train"]
+val_set = dataset["validation"]
+dataset = dataset.map(lambda example : {"support" : " ".join(example["supports.support"])})
