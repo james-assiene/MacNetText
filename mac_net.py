@@ -170,7 +170,11 @@ class MacNetAgent(TorchRankerAgent):
         
         with torch.no_grad():
             batch_size, num_candidates, max_cand_len = cand_vecs.shape
-            last_hidden_state, _ = self.model.input_unit.bert_model(cand_vecs.reshape(-1, max_cand_len)) #batch_size * num_candidates x max_cand_len x hidden_size=768
+            if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):
+                bert_model = self.model.module.input_unit.bert_model
+            else:
+                bert_model = self.model.input_unit.bert_model
+            last_hidden_state, _ = bert_model(cand_vecs.reshape(-1, max_cand_len)) #batch_size * num_candidates x max_cand_len x hidden_size=768
             label_candidates_encoded = last_hidden_state.reshape(batch_size, num_candidates, max_cand_len, 768).mean(dim=2) # batch_size x num_candidates x hidden_size
         
         
