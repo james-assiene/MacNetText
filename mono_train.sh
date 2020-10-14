@@ -20,8 +20,6 @@ touch ~/parlai_internal/__init__.py
 touch ~/parlai_internal/agents/__init__.py
 cp -R ./*.py $agent_path
 
-export PYTHONPATH=$PYTHONPATH:/home/mila/a/assienej
-
 python -m parlai.scripts.train_model --datapath $datapath --tensorboard_log=True  --tensorboard-log True --train-predict True -stim 120 -m internal:mac_net -t qangaroo \
      -bs $batch_size -veps 3 -mf "${output_dir}/$model_name" -nrh $num_reasoning_hops -dim $dim --optimizer $optimizer --lr_scheduler $lr_scheduler \
      --learningrate $learning_rate --warmup_updates $warmup_updates
