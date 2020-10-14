@@ -12,7 +12,7 @@ datapath=/scratch/jassiene/data
 
 model_name=m_${optimizer}_lr_${learning_rate}_bs_${batch_size}_dim_${dim}_nrh_${num_reasoning_hops}_lrscheduler_${lr_scheduler}_wu_${warmup_updates}
 
-export PYTHONPATH=$PYTHONPATH:/home/jassiene
+export PYTHONPATH=$PYTHONPATH:$HOME
 agent_path=~/parlai_internal/agents/mac_net/
 rm -fr $agent_path
 mkdir -p $agent_path
